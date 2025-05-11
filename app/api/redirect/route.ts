@@ -1,7 +1,7 @@
 /**
  * HTTP Status Codes:
- * 200 OK - Access granted when auth parameter is not false
- * 302 Found - Redirect to login page when auth=false
+ * 200 OK - Standard response for successful HTTP requests. Used when access is granted.
+ * 302 Found - Temporary redirect. Used to redirect the user to the login page when auth=false.
  */
 
 import { type NextRequest, NextResponse } from "next/server"

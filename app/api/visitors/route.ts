@@ -1,7 +1,7 @@
 /**
  * HTTP Status Codes:
- * 200 OK - Successful request, returning visitor count
- * 500 Internal Server Error - Server error during processing
+ * 200 OK - Standard response for successful HTTP requests. Used when successfully returning the visitor count.
+ * 500 Internal Server Error - Server encountered an unexpected condition. Used when an error occurs during processing.
  */
 
 import { NextResponse } from "next/server"

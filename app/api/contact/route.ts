@@ -1,8 +1,8 @@
 /**
  * HTTP Status Codes:
- * 201 Created - Contact message successfully received and processed
- * 400 Bad Request - Missing required fields or invalid data
- * 500 Internal Server Error - Server error during processing
+ * 201 Created - Request has been fulfilled and a new resource has been created. Used when successfully processing a contact form submission.
+ * 400 Bad Request - Server cannot process the request due to client error (e.g., missing required fields). Used when validation fails.
+ * 500 Internal Server Error - Server encountered an unexpected condition. Used when an error occurs during processing.
  */
 
 import { NextResponse } from "next/server"

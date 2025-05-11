@@ -1,13 +1,41 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Building2, HelpCircle, Mail, Bell, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function HomePage() {
   // Get site name from environment variable or use default
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "Horizon Heights"
+  const [visitorCount, setVisitorCount] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch visitor count on page load
+  useEffect(() => {
+    const fetchVisitorCount = async () => {
+      try {
+        const response = await fetch("/api/visitors")
+        if (!response.ok) {
+          throw new Error("Failed to fetch visitor count")
+        }
+        const data = await response.json()
+        setVisitorCount(data.count)
+      } catch (error) {
+        console.error("Error fetching visitor count:", error)
+        setError("Could not load visitor statistics")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchVisitorCount()
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -92,6 +120,24 @@ export default function HomePage() {
       </div>
 
       <main className="flex-1">
+        {/* Visitor Count Alert */}
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
+          {!isLoading && visitorCount !== null && (
+            <Alert className="bg-primary/10 border-primary/20">
+              <Users className="h-4 w-4" />
+              <AlertTitle>Welcome to our community!</AlertTitle>
+              <AlertDescription>
+                Our website has been visited {visitorCount} times. Thank you for being part of our community!
+              </AlertDescription>
+            </Alert>
+          )}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
@@ -229,6 +275,51 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Additional section for task requirements */}
+        <section className="w-full py-12 bg-muted/50">
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-3xl">
+              <h2 className="text-2xl font-bold mb-4">Understanding HTTP Methods</h2>
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-card p-4">
+                  <h3 className="text-lg font-semibold mb-2">GET Requests</h3>
+                  <p className="text-muted-foreground mb-2">
+                    GET requests are used to retrieve data from a server. They are idempotent, meaning multiple
+                    identical requests will have the same effect as a single request.
+                  </p>
+                  <p className="text-sm bg-muted p-2 rounded">
+                    Example: <code>/api/visitors</code> - Returns the visitor count with a 200 OK status code
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <h3 className="text-lg font-semibold mb-2">POST Requests</h3>
+                  <p className="text-muted-foreground mb-2">
+                    POST requests are used to submit data to be processed by a server. They can create new resources and
+                    are not idempotent.
+                  </p>
+                  <p className="text-sm bg-muted p-2 rounded">
+                    Example: <code>/api/contact</code> - Processes contact form submissions with a 201 Created status
+                    code
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <h3 className="text-lg font-semibold mb-2">Redirects</h3>
+                  <p className="text-muted-foreground mb-2">
+                    Redirects are used to send users to a different URL. They are commonly used for authentication flows
+                    and content restructuring.
+                  </p>
+                  <p className="text-sm bg-muted p-2 rounded">
+                    Example: <code>/api/redirect?auth=false</code> - Redirects to the login page with a 302 Found status
+                    code
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>

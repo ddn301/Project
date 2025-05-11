@@ -8,21 +8,19 @@ import Image from "next/image"
 import { Building2, ArrowLeft, Phone, Mail, MapPin, AlertCircle, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useToast } from "@/hooks/use-toast"
 
 export default function ContactPage() {
-  const { toast } = useToast()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [unit, setUnit] = useState("")
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [visitorCount, setVisitorCount] = useState<number | null>(null)
   const [isLoadingVisitors, setIsLoadingVisitors] = useState(true)
   const [visitorError, setVisitorError] = useState<string | null>(null)
@@ -52,15 +50,12 @@ export default function ContactPage() {
     e.preventDefault()
 
     if (!name || !message) {
-      toast({
-        title: "Missing information",
-        description: "Please provide your name and message.",
-        variant: "destructive",
-      })
+      setSubmitError("Please provide your name and message.")
       return
     }
 
     setIsSubmitting(true)
+    setSubmitError(null)
 
     try {
       const response = await fetch("/api/contact", {
@@ -71,7 +66,6 @@ export default function ContactPage() {
         body: JSON.stringify({
           name,
           email,
-          unit,
           subject,
           message,
         }),
@@ -82,25 +76,16 @@ export default function ContactPage() {
       }
 
       const data = await response.json()
-
-      toast({
-        title: "Message sent",
-        description: "Thank you for your message. We'll get back to you soon.",
-      })
+      setSubmitSuccess(true)
 
       // Reset form
       setName("")
       setEmail("")
-      setUnit("")
       setSubject("")
       setMessage("")
     } catch (error) {
       console.error("Error submitting form:", error)
-      toast({
-        title: "Error",
-        description: "There was a problem sending your message. Please try again.",
-        variant: "destructive",
-      })
+      setSubmitError("There was a problem sending your message. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -208,10 +193,27 @@ export default function ContactPage() {
                 possible.
               </p>
 
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <div className="grid gap-4 sm:grid-cols-2">
+              {submitSuccess ? (
+                <Alert className="bg-green-50 border-green-200 text-green-800">
+                  <AlertTitle>Thank you for your message!</AlertTitle>
+                  <AlertDescription>
+                    We have received your inquiry and will get back to you as soon as possible.
+                  </AlertDescription>
+                  <Button className="mt-4 bg-green-600 hover:bg-green-700" onClick={() => setSubmitSuccess(false)}>
+                    Send another message
+                  </Button>
+                </Alert>
+              ) : (
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  {submitError && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{submitError}</AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Name *</Label>
                     <Input
                       id="name"
                       placeholder="John Doe"
@@ -228,39 +230,33 @@ export default function ContactPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input
+                      id="subject"
+                      placeholder="How can we help you?"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="message">Message *</Label>
+                    <Textarea
+                      id="message"
+                      placeholder="Please provide details about your inquiry..."
+                      className="min-h-[120px]"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
                       required
                     />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="unit">Unit Number</Label>
-                  <Input id="unit" placeholder="e.g. 1201" value={unit} onChange={(e) => setUnit(e.target.value)} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    placeholder="How can we help you?"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Please provide details about your inquiry..."
-                    className="min-h-[120px]"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Sending..." : "Send Message"}
-                </Button>
-              </form>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Sending..." : "Send Message"}
+                  </Button>
+                </form>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -341,32 +337,6 @@ export default function ContactPage() {
                   </div>
                 </div>
               </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Strata Manager</CardTitle>
-                  <CardDescription>Your primary point of contact for strata matters</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="relative h-16 w-16 overflow-hidden rounded-full bg-muted flex items-center justify-center">
-                      <Users className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Sarah Johnson</h3>
-                      <p className="text-sm text-muted-foreground">Strata Manager</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <p>
-                      <span className="font-medium">Email:</span> sarah.johnson@horizonheights.com
-                    </p>
-                    <p>
-                      <span className="font-medium">Phone:</span> +61 2 2345 6789
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         </div>
